@@ -77,7 +77,7 @@ class SmallClientFactory(ClientFactory):
             d, self.deferred = self.deferred, None
             d.errback(reason)
 
-def get_message(host, port)
+def get_message(host, port):
     """
     Download a poem from the given host and port. This function
     returns a Deferred which will be fired with the complete text of
@@ -109,7 +109,7 @@ def get_message(host, port)
 if __name__ == '__main__':
     # HTTPsetup = server.Site(HTTPserver())
     # reactor.listenTCP(5000, HTTPsetup)
-    SerialPort(USBclient(), '/dev/ttyACM0', reactor, baudrate='115200')
+    # SerialPort(USBclient(), '/dev/ttyACM0', reactor, baudrate='115200')
 
     #######
     addresses = parse_args()
