@@ -1,6 +1,7 @@
 import sys, optparse
 from urlparse import urlparse
-from twisted.internet import reactor
+from twisted.internet import defer
+# from twisted.internet import reactor
 from twisted.internet.protocol import ClientFactory, Protocol
 from twisted.internet.serialport import SerialPort
 
