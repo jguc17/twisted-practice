@@ -39,7 +39,7 @@ Run it like this:
 class SmallProtocol(Protocol):
 
     def connectionMade(self):
-        self.transport.write(self.factory.poem)
+        self.transport.write(self.factory.text)
         self.transport.loseConnection()
 
 
@@ -60,8 +60,19 @@ def main():
 
     from twisted.internet import reactor
 
-    port = reactor.listenTCP(options.port or 0, factory,
-                             interface=options.iface)
+    # port = reactor.listenTCP(options.port or 0, factory,
+    #                          interface=options.iface)
+
+
+    # print "options interface is " + options.iface
+
+
+
+
+    # port = reactor.listenTCP(8123, factory, "DESKTOP-C69NTL2")
+    # port = reactor.listenTCP(8123, factory, "localhost")
+    port = reactor.listenTCP(8123, factory, interface='172.27.102.129')
+    # port = reactor.listenTCP(8123, factory, "172.27.102.132")
 
     print 'Serving %s on %s.' % (file, port.getHost())
 
