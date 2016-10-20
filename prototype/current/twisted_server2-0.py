@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
 #This implementation does not work with motive (yet)
-#It just sends data over and over
+#It just sends data over and over from a local file
 
-import optparse, os, sys, socket
+import optparse, os, sys, socket, csv
 from twisted.internet import reactor, defer, task
 from twisted.internet.protocol import Protocol, Factory
 from twisted.protocols.basic import LineOnlyReceiver
@@ -49,46 +49,55 @@ Run it like this:
 class MyClientConnections(LineOnlyReceiver):
 
     # def __init__(self):
-    def connectionMa1de(self):
+    def connectionMade(self):
         print "Got new client!"
-        self.factory.clients.append(self)
 
         dfd = defer.Deferred()
         # dfd.addCallback(self.factory.parseText())
         dfd.addCallback(self.sendMsg)
-        dfd.addCallback(self.factory.recycle(self))
+        # dfd.addCallback(self.factory.recycle, self)
 
-        self.factory.deferList.append(dfd)
+        self.factory.clients[self] = dfd
 
     def connectionLost(self, reason):
         print "Lost a client!"
-        self.factory.clients.remove(self)
+        self.factory.clients.pop(self)
 
         #TODO: pass on reason
 
     def sendMsg(self, msg):
+        print("sending msg:\n")
         self.sendLine(msg)
+
 
 class MyServerFactory(Factory):
     protocol = MyClientConnections
 
     def __init__(self, text):
-        self.clients = []
+        self.clients = {}
         self.text = text
-        self.deferList = []
 
     def recycle(self, client):
-        for index, c in enumerate(self.clients):
+        for c in self.clients:
             if c == client:
                 # self.deferList[index] = None
+
+                print("recycling deferred for %s\n") %(client)
+
                 dfd = defer.Deferred()
-                dfd.addCallback(c.sendMsg(self.text))
-                dfd.addCallback(self.recycle(c))
-                self.deferList[index], dfd = dfd, None
+                dfd.addCallback(c.sendMsg)
+                # dfd.addCallback(self.recycle(c))
+                self.clients[c], dfd = dfd, None
 
     def sendToAll(self):
-      for dfd in self.deferList:
-        dfd.callback()
+        print ("sending to all")
+        # check if dict is empty
+        if self.clients:
+            for client, dfd in self.clients.iteritems():
+                if dfd is not None:
+                    dfd.callback(self.text)
+                    self.recycle(client)
+                    # dfd.callback(client)
 
       # for c in self.clients:
       #   c.transport.write(message)
@@ -97,11 +106,15 @@ class MyServerFactory(Factory):
 if __name__ == '__main__':
     options, file = parse_args()
     text = open(file).read()
+    # payload = open(file)
     client_connection_factory = MyServerFactory(text)
 
     port = reactor.listenTCP(defaultTwistedServerPort, client_connection_factory, interface=socket.gethostbyname(hostName))
-    l = task.LoopingCall(client_connection_factory.sendToAll())
-    l.start(3.0)
+
+    # syntax: sendToAll() passes result of the call to LoopingCall
+    # instead, you should omit the () to pass sendToAll as an argument
+    l = task.LoopingCall(client_connection_factory.sendToAll)
+    l.start(0.7)
 
     print 'Serving %s on %s.' % (file, port.getHost())
 

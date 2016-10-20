@@ -38,6 +38,7 @@ class SocketClientProtocol(LineOnlyReceiver):
 
     # after int prefix and other framing are removed:
     def lineReceived(self, line):
+        print ("line received")
         self.factory.got_msg(line)
 
     def connectionMade(self):   # calls when connection is made with Twisted server
