@@ -67,35 +67,42 @@ class MyClientConnections(LineOnlyReceiver):
 
     def sendMsg(self, msg):
         print("sending msg:\n")
+        msg = ', '.join(msg)
         self.sendLine(msg)
 
 
 class MyServerFactory(Factory):
     protocol = MyClientConnections
 
-    def __init__(self, text):
+    def __init__(self, payload):
         self.clients = {}
-        self.text = text
+        # self.payload = payload
+        self.reader = list(csv.reader(payload))
+        self.index = 0
 
     def recycle(self, client):
         for c in self.clients:
             if c == client:
-                # self.deferList[index] = None
 
-                print("recycling deferred for %s\n") %(client)
-
+                # print("recycling deferred for %s\n") %(client)
                 dfd = defer.Deferred()
                 dfd.addCallback(c.sendMsg)
                 # dfd.addCallback(self.recycle(c))
                 self.clients[c], dfd = dfd, None
 
     def sendToAll(self):
-        print ("sending to all")
+        print ("sending row %d to all") %(self.index)
+
+        row = self.reader[self.index]
+        self.index +=1
+
+        # print ("row is %s") %(row)
+
         # check if dict is empty
         if self.clients:
             for client, dfd in self.clients.iteritems():
                 if dfd is not None:
-                    dfd.callback(self.text)
+                    dfd.callback(row)
                     self.recycle(client)
                     # dfd.callback(client)
 
@@ -105,9 +112,9 @@ class MyServerFactory(Factory):
 
 if __name__ == '__main__':
     options, file = parse_args()
-    text = open(file).read()
-    # payload = open(file)
-    client_connection_factory = MyServerFactory(text)
+    # text = open(file).read()
+    payload = open(file)
+    client_connection_factory = MyServerFactory(payload)
 
     port = reactor.listenTCP(defaultTwistedServerPort, client_connection_factory, interface=socket.gethostbyname(hostName))
 
