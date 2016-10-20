@@ -3,6 +3,7 @@
 import optparse, os
 
 from twisted.internet.protocol import ServerFactory, Protocol
+from twisted.protocols.basic import LineReceiver
 
 
 def parse_args():
@@ -36,11 +37,12 @@ Run it like this:
     return options, file
 
 
-class SmallProtocol(Protocol):
+class SmallProtocol(LineReceiver):
 
     def connectionMade(self):
         self.transport.write(self.factory.text)
-        self.transport.loseConnection()
+        self.factory.clients.append(self)
+        # self.transport.loseConnection()
 
 
     def dataReceived(self, data):
@@ -52,7 +54,10 @@ class SmallProtocol(Protocol):
         print 'received %s' % command
 
         if(command=='feedme'):
-            self.factory.giveMessage()
+            self.factory.giveMessage(self)
+
+    # def sendMsg(self, text):
+    #     self.sendLine(text)
 
 
 class SmallFactory(ServerFactory):
@@ -61,9 +66,10 @@ class SmallFactory(ServerFactory):
 
     def __init__(self, text):
         self.text = text
+        self.clients = []
 
-    def giveMessage(self):
-        self.transport.write(self.text)
+    def giveMessage(self, client):
+        client.transport.write(self.text)
 
 def main():
     options, file = parse_args()
@@ -74,17 +80,9 @@ def main():
 
     from twisted.internet import reactor
 
-    # port = reactor.listenTCP(options.port or 0, factory,
-    #                          interface=options.iface)
 
-
-    # print "options interface is " + options.iface
-
-
-
-
-    # port = reactor.listenTCP(8123, factory, "localhost")
-    port = reactor.listenTCP(8123, factory, interface='172.27.102.196')
+    # port = reactor.listenTCP(8123, factory, interface='172.27.102.58')
+    port = reactor.listenTCP(8123, factory, interface='127.0.1.1')
 
     print 'Serving %s on %s.' % (file, port.getHost())
 

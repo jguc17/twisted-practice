@@ -42,14 +42,12 @@ class SmallProtocol(Protocol):
         self.transport.write(self.factory.text)
         self.transport.loseConnection()
 
-
 class SmallFactory(ServerFactory):
 
     protocol = SmallProtocol
 
     def __init__(self, text):
         self.text = text
-
 
 def main():
     options, file = parse_args()
