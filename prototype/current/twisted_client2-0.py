@@ -79,6 +79,7 @@ class SocketClientFactory(ClientFactory):
         # self.recv_callback()
         print (msg)
 
+    #TODO: NOT CALLED --> do we want clients to send messages to server?
     def send_msg(self, msg):
         if self.client:
             self.client.sendLine(msg)

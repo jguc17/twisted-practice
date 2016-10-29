@@ -37,7 +37,7 @@ Run it like this:
     options, args = parser.parse_args()
 
     if len(args) != 1:
-        parser.error('Provide exactly one poetry file.')
+        parser.error('Provide exactly one CSV file.')
 
     file = args[0]
 
@@ -67,7 +67,7 @@ class MyClientConnections(LineOnlyReceiver):
 
     def sendMsg(self, msg):
         print("sending msg:\n")
-        msg = ', '.join(msg)
+        msg = ', '.join(msg)    #make comma-delimited
         self.sendLine(msg)
 
 
@@ -93,7 +93,7 @@ class MyServerFactory(Factory):
     def sendToAll(self):
         print ("sending row %d to all") %(self.index)
 
-        row = self.reader[self.index]
+        row = self.reader[self.index]   #parse through reader using index instance
         self.index +=1
 
         # print ("row is %s") %(row)
@@ -121,7 +121,7 @@ if __name__ == '__main__':
     # syntax: sendToAll() passes result of the call to LoopingCall
     # instead, you should omit the () to pass sendToAll as an argument
     l = task.LoopingCall(client_connection_factory.sendToAll)
-    l.start(0.7)
+    l.start(0.1)    # data send rate
 
     print 'Serving %s on %s.' % (file, port.getHost())
 
